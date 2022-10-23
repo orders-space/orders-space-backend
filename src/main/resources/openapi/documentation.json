@@ -1,0 +1,32 @@
+{
+  "openapi" : "3.0.3",
+  "info" : {
+    "title" : "orders_space_backend_main API",
+    "description" : "orders_space_backend_main API",
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "url" : "https://orders_space_backend_main"
+  } ],
+  "paths" : {
+    "/" : {
+      "get" : {
+        "description" : "",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/plain" : {
+                "examples" : {
+                  "Example#1" : {
+                    "value" : "Hello World!"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
