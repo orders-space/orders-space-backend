@@ -1,4 +1,4 @@
-package com.ordersspace.data
+package com.ordersspace.model
 
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
@@ -17,6 +17,6 @@ object DatabaseFactory {
         }
     }
 
-    suspend fun <T> dbQuery(block: suspend () -> T): T =
+    suspend inline fun <T> dbQuery(crossinline block: () -> T): T =
         newSuspendedTransaction(Dispatchers.IO) { block() }
 }

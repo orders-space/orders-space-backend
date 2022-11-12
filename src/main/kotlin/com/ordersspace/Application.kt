@@ -1,7 +1,7 @@
 package com.ordersspace
 
-import com.ordersspace.data.DatabaseFactory
-import com.ordersspace.plugins.configureRouting
+import com.ordersspace.model.DatabaseFactory
+import com.ordersspace.routes.configureRouting
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*

@@ -1,6 +1,6 @@
-package com.ordersspace.data
+package com.ordersspace.model
 
-import com.ordersspace.data.DatabaseFactory.dbQuery
+import com.ordersspace.model.DatabaseFactory.dbQuery
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
@@ -19,6 +19,18 @@ object Dao {
 
     suspend fun getUser(id: ULong) = dbQuery {
         Users.select { Users.id eq id }
+            .singleOrNull()
+            ?.toUser()
+    }
+
+    suspend fun getUserByPhone(phone: String) = dbQuery {
+        Users.select { Users.phone eq phone }
+            .singleOrNull()
+            ?.toUser()
+    }
+
+    suspend fun getUserByEmail(email: String) = dbQuery {
+        Users.select { Users.email eq email }
             .singleOrNull()
             ?.toUser()
     }

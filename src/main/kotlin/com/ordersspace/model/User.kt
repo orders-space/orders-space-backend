@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 
-package com.ordersspace.data
+package com.ordersspace.model
 
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.Table

@@ -40,7 +40,6 @@ dependencies {
 
     implementation("com.h2database:h2:$h2Version")
     implementation("io.ktor:ktor-server-content-negotiation-jvm:2.1.2")
-    implementation("io.ktor:ktor-serialization-gson-jvm:2.1.2")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
