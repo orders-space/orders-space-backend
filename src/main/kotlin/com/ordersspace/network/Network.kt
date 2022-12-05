@@ -45,6 +45,12 @@ object Networks : Table() {
             ?.toNetwork()
     }
 
+    suspend fun get(id: ULong, ownerId: ULong): Network? = dbQuery {
+        select { (Networks.id eq id) and (Networks.ownerId eq ownerId) }
+            .singleOrNull()
+            ?.toNetwork()
+    }
+
     suspend fun getByOwner(id: ULong): List<Network> = dbQuery {
         select { ownerId eq id }
             .map { it.toNetwork() }
@@ -70,9 +76,10 @@ object Networks : Table() {
 
     suspend fun edit(
         id: ULong,
+        ownerId: ULong,
         params: Map<Column<String>, String>,
     ): Boolean = dbQuery {
-        update({ Networks.id eq id }) {
+        update({ (Networks.id eq id) and (Networks.ownerId eq ownerId) }) {
             params.forEach { (column, value) -> it[column] = value }
         } > 0
     }

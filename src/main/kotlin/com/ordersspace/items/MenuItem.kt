@@ -3,6 +3,8 @@
 package com.ordersspace.items
 
 import com.ordersspace.DatabaseFactory.dbQuery
+import com.ordersspace.network.*
+import com.ordersspace.place.Place
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -18,10 +20,16 @@ data class MenuItem(
     val description: String?,
     val isAgeRestricted: Boolean,
     val imageUrl: String?,
+    val networkId: ULong,
 ) {
 
     enum class ItemType {
-        GOODS, DISH, PREPARED, SERVICE, RATE
+        GOODS, DISH, PREPARED, SERVICE, RATE;
+
+        companion object {
+
+            fun String.toItemType(): ItemType? = values().find { it.name.equals(this, true) }
+        }
     }
 }
 
@@ -36,6 +44,7 @@ object MenuItems : Table() {
     val description = varchar("description", 500).nullable()
     val isAgeRestricted = bool("isAgeRestricted")
     val imageUrl = varchar("imageUrl", 250).nullable()
+    val networkId = ulong("networkId") references Networks.id
 
     override val primaryKey = PrimaryKey(id)
 
@@ -49,6 +58,7 @@ object MenuItems : Table() {
         description = get(description),
         isAgeRestricted = get(isAgeRestricted),
         imageUrl = get(imageUrl),
+        networkId = get(networkId),
     )
 
     suspend fun get(id: ULong): MenuItem? = dbQuery {
@@ -56,6 +66,29 @@ object MenuItems : Table() {
             .singleOrNull()
             ?.toMenuItem()
     }
+
+    suspend fun get(id: ULong, networkId: ULong): MenuItem? = dbQuery {
+        select { (MenuItems.id eq id) and (MenuItems.networkId eq networkId) }
+            .singleOrNull()
+            ?.toMenuItem()
+    }
+
+    suspend fun Network.getMenuItem(id: ULong) = get(id, this.id)
+
+    suspend fun getByNetwork(id: ULong): List<MenuItem> = dbQuery {
+        select { networkId eq id }
+            .map { it.toMenuItem() }
+    }
+
+    suspend fun Network.getMenuItems(): List<MenuItem> = getByNetwork(id)
+
+    suspend fun getByPlace(id: ULong): List<MenuItem> = dbQuery {
+        (MenuItems innerJoin PlaceMenuItems)
+            .select { (PlaceMenuItems.menuItemId eq MenuItems.id) and (PlaceMenuItems.placeId eq id) }
+            .map { it.toMenuItem() }
+    }
+
+    suspend fun Place.getMenuItems() = getByPlace(id)
 
     suspend fun create(
         name: String,
@@ -66,6 +99,7 @@ object MenuItems : Table() {
         description: String?,
         isAgeRestricted: Boolean,
         imageUrl: String?,
+        networkId: ULong,
     ): MenuItem? = dbQuery {
         insert {
             it[MenuItems.name] = name
@@ -76,6 +110,7 @@ object MenuItems : Table() {
             it[MenuItems.description] = description
             it[MenuItems.isAgeRestricted] = isAgeRestricted
             it[MenuItems.imageUrl] = imageUrl
+            it[MenuItems.networkId] = networkId
         }.resultedValues
             ?.singleOrNull()
             ?.toMenuItem()

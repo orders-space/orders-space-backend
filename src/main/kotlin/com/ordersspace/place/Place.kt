@@ -42,6 +42,14 @@ object Places : Table() {
             ?.toPlace()
     }
 
+    suspend fun get(id: ULong, networkId: ULong): Place? = dbQuery {
+        select { (Places.id eq id) and (Places.networkId eq networkId) }
+            .singleOrNull()
+            ?.toPlace()
+    }
+
+    suspend fun Network.getPlace(id: ULong) = get(id, this.id)
+
     suspend fun getByNetwork(id: ULong): List<Place> = dbQuery {
         select { networkId eq id }
             .map { it.toPlace() }
@@ -67,19 +75,15 @@ object Places : Table() {
 
     suspend fun edit(
         id: ULong,
-        name: String?,
-        description: String?,
-        imageUrl: String?,
-        networkId: ULong?,
-        mask: Int,
+        networkId: ULong,
+        params: Map<Column<String>, String>,
     ): Boolean = dbQuery {
-        update({ Places.id eq id }) {
-            if (mask and 0b00000001 != 0) it[Places.name] = name!!
-            if (mask and 0b00000010 != 0) it[Places.description] = description!!
-            if (mask and 0b00000100 != 0) it[Places.imageUrl] = imageUrl!!
-            if (mask and 0b00001000 != 0) it[Places.networkId] = networkId!!
+        update({ (Places.id eq id) and (Places.networkId eq networkId) }) {
+            params.forEach { (column, value) -> it[column] = value }
         } > 0
     }
+
+    suspend fun Network.editPlace(id: ULong, params: Map<Column<String>, String>) = edit(id, this.id, params)
 
     suspend fun delete(id: ULong): Boolean = dbQuery {
         deleteWhere { Places.id eq id } > 0
