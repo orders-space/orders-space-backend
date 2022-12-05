@@ -1,6 +1,5 @@
 package com.ordersspace.customer
 
-import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.NotModified
@@ -9,15 +8,15 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.util.pipeline.*
 
 fun Routing.customerRoute() = route("customer") {
-    authenticate("orders-space-auth-customer") {
+    authenticate("orders-space-customer") {
         get("auth") {
-            getCustomer()?.let { call.respond(it) }
+            call.principal<Customer>()?.let { call.respond(it) }
+                ?: call.respondText("Failed authentication", status = NotFound)
         }
         delete("signout") {
-            val name = call.principal<UserIdPrincipal>()?.name
+            val name = call.principal<Customer>()?.name
                 ?: return@delete call.respondText("Invalid name", status = BadRequest)
             val customer = Customers.getByName(name)
                 ?: return@delete call.respondText("Failed to get user", status = NotFound)
@@ -37,11 +36,4 @@ fun Routing.customerRoute() = route("customer") {
             ?: return@post call.respondText("Failed to create user", status = NotModified)
         call.respond(customer)
     }
-}
-
-private suspend fun PipelineContext<Unit, ApplicationCall>.getCustomer(): Customer? {
-    val name = call.principal<UserIdPrincipal>()?.name
-        ?: return null.also { call.respondText("Invalid name", status = BadRequest) }
-    return Customers.getByName(name)
-        ?: null.also { call.respondText("Customer not found", status = NotFound) }
 }

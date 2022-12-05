@@ -1,29 +1,23 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 
-package com.ordersspace.customer
+package com.ordersspace.admin
 
 import com.ordersspace.DatabaseFactory.dbQuery
+import com.ordersspace.customer.*
 import io.ktor.server.auth.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 @Serializable
-data class Customer(
+data class Admin(
     val id: ULong,
     val name: String,
     val phone: String?,
     val email: String?,
 ) : Principal
 
-@Serializable
-data class CustomerAuth(
-    val id: ULong,
-    val name: String,
-    val password: String,
-)
-
-object Customers : Table() {
+object Admins : Table() {
 
     val id = ulong("id").autoIncrement()
     val name = varchar("name", 50)
@@ -33,29 +27,23 @@ object Customers : Table() {
 
     override val primaryKey = PrimaryKey(id)
 
-    private fun ResultRow.toCustomer() = Customer(
+    private fun ResultRow.toAdmin() = Admin(
         id = get(id),
         name = get(name),
         phone = get(phone),
         email = get(email),
     )
 
-    private fun ResultRow.toCustomerAuth() = CustomerAuth(
-        id = get(id),
-        name = get(name),
-        password = get(password),
-    )
-
-    suspend fun validate(name: String, password: String): Customer? = dbQuery {
-        select { (Customers.name eq name) and (Customers.password eq password) }
+    suspend fun validate(name: String, password: String): Admin? = dbQuery {
+        select { (Admins.name eq name) and (Admins.password eq password) }
             .singleOrNull()
-            ?.toCustomer()
+            ?.toAdmin()
     }
 
-    suspend fun getByName(name: String): Customer? = dbQuery {
-        select { Customers.name eq name }
+    suspend fun getByName(name: String): Admin? = dbQuery {
+        select { Admins.name eq name }
             .singleOrNull()
-            ?.toCustomer()
+            ?.toAdmin()
     }
 
     suspend fun add(
@@ -63,15 +51,15 @@ object Customers : Table() {
         password: String,
         phone: String? = null,
         email: String? = null,
-    ): Customer? = dbQuery {
+    ): Admin? = dbQuery {
         insert {
-            it[Customers.name] = name
-            it[Customers.password] = password
-            it[Customers.phone] = phone
-            it[Customers.email] = email
+            it[Admins.name] = name
+            it[Admins.password] = password
+            it[Admins.phone] = phone
+            it[Admins.email] = email
         }.resultedValues
             ?.singleOrNull()
-            ?.toCustomer()
+            ?.toAdmin()
     }
 
     suspend fun edit(
@@ -82,11 +70,11 @@ object Customers : Table() {
         email: String?,
         mask: Int,
     ): Boolean = dbQuery {
-        update({ Customers.id eq id }) {
-            if (mask and 0b00000001 != 0) it[Customers.name] = name!!
-            if (mask and 0b00000010 != 0) it[Customers.password] = password!!
-            if (mask and 0b00000100 != 0) it[Customers.phone] = phone
-            if (mask and 0b00001000 != 0) it[Customers.email] = email
+        update({ Admins.id eq id }) {
+            if (mask and 0b00000001 != 0) it[Admins.name] = name!!
+            if (mask and 0b00000010 != 0) it[Admins.password] = password!!
+            if (mask and 0b00000100 != 0) it[Admins.phone] = phone
+            if (mask and 0b00001000 != 0) it[Admins.email] = email
         } > 0
     }
 
@@ -94,4 +82,5 @@ object Customers : Table() {
         deleteWhere { Customers.id eq id } > 0
     }
 }
+
 

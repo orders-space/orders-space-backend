@@ -1,7 +1,10 @@
-package com.ordersspace.model
+package com.ordersspace
 
+import com.ordersspace.admin.Admins
 import com.ordersspace.customer.Customers
-import com.ordersspace.items.InventoryItems
+import com.ordersspace.items.*
+import com.ordersspace.network.Networks
+import com.ordersspace.place.Places
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -15,8 +18,15 @@ object DatabaseFactory {
         val jdbcURL = "jdbc:h2:file:./build/db"
         val database = Database.connect(jdbcURL, driverClassName)
         transaction(database) {
-            SchemaUtils.create(Users, Places, Auths)
-            SchemaUtils.create(Customers, InventoryItems)
+            SchemaUtils.create(
+                Customers,
+                Admins,
+                InventoryItems,
+                MenuItems,
+                Places,
+                PlaceMenuItems,
+                Networks,
+            )
         }
     }
 

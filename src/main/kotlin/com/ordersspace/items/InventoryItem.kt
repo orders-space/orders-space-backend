@@ -2,8 +2,8 @@
 
 package com.ordersspace.items
 
-import com.ordersspace.model.DatabaseFactory.dbQuery
-import com.ordersspace.model.Places
+import com.ordersspace.DatabaseFactory.dbQuery
+import com.ordersspace.place.Places
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
