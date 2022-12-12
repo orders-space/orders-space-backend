@@ -36,7 +36,7 @@ fun Routing.adminRoute() = route("admin") {
                 patch("edit") { editNetwork() }
                 route("items") {
                     get { getMenuItems() }
-                    post("create") { /* TODO: create menu item */ }
+                    post("create") { createMenuItem() }
                     route("{iid}") {
                         get { getMenuItem() }
                         patch("edit") { /* TODO: edit menu item */ }
