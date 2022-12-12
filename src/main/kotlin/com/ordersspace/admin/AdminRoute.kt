@@ -11,17 +11,13 @@ import com.ordersspace.place.Places
 import com.ordersspace.place.Places.editPlace
 import com.ordersspace.place.Places.getPlace
 import com.ordersspace.place.Places.getPlaces
-import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.NotModified
-import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.util.*
-import org.jetbrains.exposed.sql.*
 
 fun Routing.adminRoute() = route("admin") {
     post("signup") { signup() }
@@ -59,37 +55,6 @@ fun Routing.adminRoute() = route("admin") {
     }
 }
 
-private suspend fun Context.getAdmin(): Admin? {
-    return call.principal<Admin>()
-        .also { if (it == null) call.respondText("Failed authentication", status = NotFound) }
-}
-
-private suspend fun Context.getNetworkId(): ULong? {
-    return call.parameters["id"]?.toULongOrNull()
-        .also { if (it == null) call.respondText("Invalid network ID", status = BadRequest) }
-}
-
-private suspend fun Context.getPlaceId(): ULong? {
-    return call.parameters["pid"]?.toULongOrNull()
-        .also { if (it == null) call.respondText("Invalid place ID", status = BadRequest) }
-}
-
-private suspend fun Context.getMenuItemId(): ULong? {
-    return call.parameters["iid"]?.toULongOrNull()
-        .also { if (it == null) call.respondText("Invalid menu item ID", status = BadRequest) }
-}
-
-private inline fun <reified C : Comparable<C>> Parameters.toColumns(
-    table: Table,
-    converter: String.() -> C
-): Map<Column<C>, C> {
-    val columns = table.columns.filterIsInstance<Column<C>>()
-    return toMap()
-        .mapValues { (_, value) -> value.single().converter() }
-        .filter { (name, _) -> columns.any { it.name == name } }
-        .mapKeys { (name, _) -> columns.first { it.name == name } }
-}
-
 private suspend fun Context.signup() {
     val admin = Admins.add(
         params["name"] ?: return call.respondText("Name not specified", status = BadRequest),
@@ -107,7 +72,7 @@ private suspend fun Context.auth() {
 private suspend fun Context.signout() {
     val admin = getAdmin() ?: return
     if (Admins.delete(admin.id))
-        call.respondText("Success", status = OK)
+        call.respondText("Success")
     else call.respondText("Failed to delete user", status = NotModified)
 }
 

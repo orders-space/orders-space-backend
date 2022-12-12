@@ -4,6 +4,8 @@ import com.ordersspace.admin.Admins
 import com.ordersspace.customer.Customers
 import com.ordersspace.items.*
 import com.ordersspace.network.Networks
+import com.ordersspace.order.MenuItemSnapshots
+import com.ordersspace.order.Orders
 import com.ordersspace.place.Places
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
@@ -26,6 +28,8 @@ object DatabaseFactory {
                 Places,
                 PlaceMenuItems,
                 Networks,
+                Orders,
+                MenuItemSnapshots,
             )
         }
     }
