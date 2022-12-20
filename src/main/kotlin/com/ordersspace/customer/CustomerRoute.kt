@@ -1,15 +1,12 @@
 package com.ordersspace.customer
 
-import com.ordersspace.Context
-import com.ordersspace.getCustomer
-import com.ordersspace.getOrderId
+import com.ordersspace.*
 import com.ordersspace.items.MenuItems
 import com.ordersspace.order.MenuItemSnapshots
 import com.ordersspace.order.Order.Status.Companion.toStatus
 import com.ordersspace.order.Orders
 import com.ordersspace.order.Orders.getCurrentOrders
 import com.ordersspace.order.Orders.getOrders
-import com.ordersspace.params
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.NotModified
@@ -21,7 +18,10 @@ import io.ktor.server.routing.*
 fun Routing.customerRoute() = route("customer") {
     authenticate("orders-space-customer") {
         get("auth") { auth() }
-        get("menu") { getMenu() } // TODO: recommendations, for now just all menu items
+        route("menu") {
+            get { getMenu() }
+            get("{iid}") { getMenuItem() }
+        }
         delete("signout") { signout() }
         route("orders") {
             get { getOrders() }
@@ -60,6 +60,13 @@ private suspend fun Context.auth() {
 
 private suspend fun Context.getMenu() {
     call.respond(MenuItems.getAll())
+}
+
+private suspend fun Context.getMenuItem() {
+    val id = getMenuItemId() ?: return
+    MenuItems.get(id)
+        ?.let { call.respond(it) }
+        ?: call.respondText("No such menu item", status = NotFound)
 }
 
 private suspend fun Context.signout() {
