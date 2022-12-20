@@ -202,5 +202,6 @@ private suspend fun Context.getMenu() {
     Networks.get(id, admin.id)
         ?.getPlace(pid)
         ?.getMenuItems()
+        ?.let { call.respond(it) }
         ?: return call.respondText("No such place", status = NotFound)
 }

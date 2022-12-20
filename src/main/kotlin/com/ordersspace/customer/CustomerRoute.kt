@@ -3,6 +3,8 @@ package com.ordersspace.customer
 import com.ordersspace.Context
 import com.ordersspace.getCustomer
 import com.ordersspace.getOrderId
+import com.ordersspace.items.MenuItems
+import com.ordersspace.order.MenuItemSnapshots
 import com.ordersspace.order.Order.Status.Companion.toStatus
 import com.ordersspace.order.Orders
 import com.ordersspace.order.Orders.getCurrentOrders
@@ -19,6 +21,7 @@ import io.ktor.server.routing.*
 fun Routing.customerRoute() = route("customer") {
     authenticate("orders-space-customer") {
         get("auth") { auth() }
+        get("menu") { getMenu() } // TODO: recommendations, for now just all menu items
         delete("signout") { signout() }
         route("orders") {
             get { getOrders() }
@@ -27,6 +30,14 @@ fun Routing.customerRoute() = route("customer") {
             route("{id}") {
                 get { getOrder() }
                 patch("edit") { editOrder() }
+                route("items") {
+                    get { getMenuItemSnapshots() }
+                    post("create") { createMenuItemSnapshot() }
+                    route("{iid}") {
+                        get {  }
+                        delete {  }
+                    }
+                }
             }
         }
     }
@@ -45,6 +56,10 @@ private suspend fun Context.signup() {
 
 private suspend fun Context.auth() {
     getCustomer()?.let { call.respond(it) }
+}
+
+private suspend fun Context.getMenu() {
+    call.respond(MenuItems.getAll())
 }
 
 private suspend fun Context.signout() {
@@ -97,4 +112,28 @@ private suspend fun Context.editOrder() {
             ?: call.respondText("Edit success, but failed to get order", status = NotFound)
         else call.respondText("Failed to edit network", status = NotModified)
     }
+}
+
+private suspend fun Context.getMenuItemSnapshots() {
+    val customer = getCustomer() ?: return
+    val orderId = getOrderId() ?: return
+    val menuItems = MenuItemSnapshots.getMenuItemsByOrder(orderId)
+    call.respond(menuItems)
+}
+
+private suspend fun Context.createMenuItemSnapshot() {
+    val customer = getCustomer() ?: return
+    val orderId = getOrderId() ?: return
+    val menuItem = MenuItems.get(
+        params["iid"]?.toULongOrNull()
+            ?: return call.respondText("Menu item ID not specified", status = BadRequest)
+    ) ?: return call.respondText("No menu item with this ID found", status = NotFound)
+    MenuItemSnapshots.create(
+        menuItem.name,
+        menuItem.cost,
+        menuItem.imageUrl,
+        menuItem.id,
+        orderId,
+    )?.let { call.respond(it) }
+        ?: return call.respondText("Failed to create menu item snapshot", status = NotModified)
 }

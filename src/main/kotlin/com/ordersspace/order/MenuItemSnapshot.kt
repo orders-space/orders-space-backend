@@ -3,6 +3,7 @@
 package com.ordersspace.order
 
 import com.ordersspace.DatabaseFactory.dbQuery
+import com.ordersspace.items.MenuItem
 import com.ordersspace.items.MenuItems
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
@@ -38,6 +39,19 @@ object MenuItemSnapshots : Table() {
         orderId = get(orderId),
     )
 
+    private fun ResultRow.toMenuItem() = MenuItem(
+        id = get(MenuItems.id),
+        name = get(name),
+        type = get(MenuItems.type),
+        cost = get(cost),
+        weight = get(MenuItems.weight),
+        volume = get(MenuItems.volume),
+        description = get(MenuItems.description),
+        isAgeRestricted = get(MenuItems.isAgeRestricted),
+        imageUrl = get(imageUrl),
+        networkId = get(MenuItems.networkId),
+    )
+
     suspend fun get(id: ULong): MenuItemSnapshot? = dbQuery {
         select { MenuItemSnapshots.id eq id }
             .singleOrNull()
@@ -50,6 +64,12 @@ object MenuItemSnapshots : Table() {
     }
 
     suspend fun Order.getMenuItemSnapshots() = getByOrder(id)
+
+    suspend fun getMenuItemsByOrder(id: ULong): List<MenuItem> = dbQuery {
+        (MenuItemSnapshots innerJoin MenuItems)
+            .select { (orderId eq id) and (menuItemId eq MenuItems.id) }
+            .map { it.toMenuItem() }
+    }
 
     suspend fun create(
         name: String,

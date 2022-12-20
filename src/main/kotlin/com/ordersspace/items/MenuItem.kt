@@ -61,6 +61,10 @@ object MenuItems : Table() {
         networkId = get(networkId),
     )
 
+    suspend fun getAll(): List<MenuItem> = dbQuery {
+        selectAll().map { it.toMenuItem() }
+    }
+
     suspend fun get(id: ULong): MenuItem? = dbQuery {
         select { MenuItems.id eq id }
             .singleOrNull()
