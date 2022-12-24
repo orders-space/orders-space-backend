@@ -61,6 +61,15 @@ object MenuItems : Table() {
         networkId = get(networkId),
     )
 
+    private fun ResultRow.toMenuItemCard() = MenuItemCard(
+        id = get(id),
+        name = get(name),
+        description = get(description),
+        networkName = get(Networks.name),
+        imageUrl = get(imageUrl),
+        cost = get(cost),
+    )
+
     suspend fun getAll(): List<MenuItem> = dbQuery {
         selectAll().map { it.toMenuItem() }
     }
@@ -75,6 +84,19 @@ object MenuItems : Table() {
         select { (MenuItems.id eq id) and (MenuItems.networkId eq networkId) }
             .singleOrNull()
             ?.toMenuItem()
+    }
+
+    suspend fun getCard(id: ULong): MenuItemCard? = dbQuery {
+        innerJoin(Networks)
+            .select { (MenuItems.id eq id) and (Networks.id eq networkId) }
+            .singleOrNull()
+            ?.toMenuItemCard()
+    }
+
+    suspend fun getAllCards(): List<MenuItemCard> = dbQuery {
+        innerJoin(Networks)
+            .select { Networks.id eq networkId }
+            .map { it.toMenuItemCard() }
     }
 
     suspend fun Network.getMenuItem(id: ULong) = get(id, this.id)

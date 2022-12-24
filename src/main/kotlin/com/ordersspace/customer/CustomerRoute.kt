@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUnsignedTypes::class)
+
 package com.ordersspace.customer
 
 import com.ordersspace.*
@@ -10,10 +12,13 @@ import com.ordersspace.order.Orders.getOrders
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.NotModified
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.*
 
 fun Routing.customerRoute() = route("customer") {
     authenticate("orders-space-customer") {
@@ -21,6 +26,9 @@ fun Routing.customerRoute() = route("customer") {
         route("menu") {
             get { getMenu() }
             get("{iid}") { getMenuItem() }
+        }
+        route("cart") {
+            get { getCart() }
         }
         delete("signout") { signout() }
         route("orders") {
@@ -59,7 +67,7 @@ private suspend fun Context.auth() {
 }
 
 private suspend fun Context.getMenu() {
-    call.respond(MenuItems.getAll())
+    call.respond(MenuItems.getAllCards())
 }
 
 private suspend fun Context.getMenuItem() {
@@ -143,4 +151,13 @@ private suspend fun Context.createMenuItemSnapshot() {
         orderId,
     )?.let { call.respond(it) }
         ?: return call.respondText("Failed to create menu item snapshot", status = NotModified)
+}
+
+private suspend fun Context.getCart() {
+    val customer = getCustomer() ?: return
+    val ids = params["ids"].orEmpty().split(", ").mapNotNull { it.toULongOrNull() }
+    val result = coroutineScope {
+        ids.map { async { MenuItems.getCard(it) } }.awaitAll().filterNotNull()
+    }
+    call.respond(result)
 }
